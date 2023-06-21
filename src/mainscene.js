@@ -1,6 +1,9 @@
 import Phaser from "phaser";
 import background from "./assets/background.jpg";
 import handImage from "./assets/hand.png";
+import cardRunImage from "./assets/run.png";
+import cardSleepImage from "./assets/sleep.png";
+import cardWinkImage from "./assets/wink.png";
 
 const gameWidth = 1024;
 const gameHeight = 576;
@@ -17,44 +20,12 @@ export default class MainScene extends Phaser.Scene {
   preload() {
     this.load.image("background", background);
     this.load.image("handImage", handImage);
+    this.load.image("cardRunImage", cardRunImage);
+    this.load.image("cardSleepImage", cardSleepImage);
+    this.load.image("cardWinkImage", cardWinkImage);
   }
 
   create() {
-    // var tableSprite = this.add.sprite(400, 300, "tableImage");
-    // var deckSprite = this.add.sprite(600, 400, "deckImage");
-
-    // var cardRun = { id: 1, name: "Card Run", image: "cardRunImage" };
-    // var cardSleep = { id: 2, name: "Card Sleep", image: "cardSleepImage" };
-    // var cardWink = { id: 3, name: "Card Wink", image: "cardWinkImage" };
-
-    // hand.push(cardRun);
-    // hand.push(cardSleep);
-    // hand.push(cardWink);
-
-    // hand.forEach(function(card) {
-    //   var cardSprite = this.add.sprite(0, 0, card.image);
-    //   cardSprite.setInteractive();
-
-    //   cardSprite.on(
-    //     "pointerdown",
-    //     function(pointer) {
-    //       console.log("Вы выбрали карту:", card.name);
-    //     },
-    //     this
-    //   );
-
-    //   var cardOffsetX = 50;
-    //   var cardOffsetY = 0;
-    //   var cardSpacing = 20;
-
-    //   cardSprite.x =
-    //     handSprite.x -
-    //     hand.length * cardOffsetX +
-    //     cardOffsetX * hand.indexOf(card) +
-    //     cardSpacing * hand.indexOf(card);
-    //   cardSprite.y = handSprite.y + cardOffsetY;
-    // }, this);
-
     const bg = this.add.image(gameWidth / 2, gameHeight / 2, "background");
 
     const scaleX = gameWidth / bg.width;
@@ -62,8 +33,32 @@ export default class MainScene extends Phaser.Scene {
     const scale = Math.max(scaleX, scaleY);
     bg.setScale(scale).setScrollFactor(0);
 
-    var handSprite = this.add.sprite(300, gameHeight - 150, "handImage").setScale(0.5);
-    handSprite.setAngle(-30);
+    var cardRun = { id: 1, name: "Card Run", image: "cardRunImage" };
+    var cardSleep = { id: 2, name: "Card Sleep", image: "cardSleepImage" };
+    var cardWink = { id: 3, name: "Card Wink", image: "cardWinkImage" };
 
+    hand.push(cardRun);
+    hand.push(cardSleep);
+    hand.push(cardWink);
+
+    var cardRunSprite = this.add
+      .sprite(350, 200, "cardRunImage")
+      .setScale(0.3)
+      .setAngle(-20);
+
+    var cardSleepSprite = this.add
+      .sprite(400, 200, "cardSleepImage")
+      .setScale(0.3)
+      .setAngle(0);
+
+    var cardWinkSprite = this.add
+      .sprite(500, 200, "cardWinkImage")
+      .setScale(0.3)
+      .setAngle(25);
+
+    var handSprite = this.add
+      .sprite(300, gameHeight - 150, "handImage")
+      .setScale(0.5)
+      .setAngle(-30);
   }
 }
