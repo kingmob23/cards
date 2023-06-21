@@ -1,4 +1,6 @@
 import Phaser from "phaser";
+import background from "./assets/background.jpg";
+
 
 const gameWidth = 1024;
 const gameHeight = 576;
@@ -9,7 +11,7 @@ export default class MainScene extends Phaser.Scene {
   }
 
   preload() {
-    this.load.image("background", "src/assets/background.jpg");
+    this.load.image("background", background);
   }
 
   create() {

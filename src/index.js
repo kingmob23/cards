@@ -1,5 +1,7 @@
 import Phaser from "phaser";
 import MainScene from "./mainscene";
+import logo from "./assets/logo.png";
+import mainMenu from "./assets/mainMenu.jpg"
 
 const gameWidth = 1024;
 const gameHeight = 576;
@@ -10,8 +12,8 @@ class MyGame extends Phaser.Scene {
   }
 
   preload() {
-    this.load.image("logo", "src/assets/logo.png");
-    this.load.image("mainMenu", "src/assets/mainMenu.jpg");
+    this.load.image("logo", logo);
+    this.load.image("mainMenu", mainMenu);
   }
 
   create() {
@@ -23,7 +25,6 @@ class MyGame extends Phaser.Scene {
     mainMenu.setScale(scale).setScrollFactor(0);
 
     const logo = this.add.image(400, 150, "logo");
-    logo.setScale(0.5)
 
     this.add.rectangle(740, 420, 150, 50, 0x000000);
 
