@@ -20,15 +20,12 @@ module.exports = {
         use: "raw-loader"
       },
       {
-        test: /\.(gif|png|jpe?g|svg|xml)$/i,
-        use: "file-loader"
-      },
-      {
         test: /\.(jpe?g|png|gif|svg)$/i,
         loader: "file-loader",
         options: {
           name: "[name].[ext]",
-          outputPath: "assets/"
+          outputPath: "assets/",
+          publicPath: "assets/"
         }
       }
     ]
