@@ -26,16 +26,13 @@ const botTablePositions = [
   { x: 600, y: 80 }
 ];
 
-var playerTableQueue = [...playerTablePositions];
-var botTableQueue = [...botTablePositions];
-
-var botHand = [];
-
-var turn = "player";
-
 export default class MainScene extends Phaser.Scene {
   constructor() {
     super("MainScene");
+    this.botHand = [];
+    this.turn = "player";
+    this.playerTableQueue = [...playerTablePositions];
+    this.botTableQueue = [...botTablePositions];
   }
 
   preload() {
@@ -56,18 +53,23 @@ export default class MainScene extends Phaser.Scene {
     const scale = Math.max(scaleX, scaleY);
     bg.setScale(scale).setScrollFactor(0);
 
-    var backSprite = this.add
-      .sprite(gameWidth - 180, gameHeight / 2, "backImage")
-      .setScale(0.2)
-      .setAngle(90);
+    const backSprite = this.addSprite(
+      gameWidth - 180,
+      gameHeight / 2,
+      "backImage",
+      0.2,
+      90
+    );
 
-    // Предположим, что рука изначально находится за пределами экрана
-    var handSprite = this.add
-      .sprite(-250, gameHeight - 80, "handImage")
-      .setScale(0.3)
-      .setAngle(-30);
+    const handSprite = this.addSprite(
+      -250,
+      gameHeight - 80,
+      "handImage",
+      0.3,
+      -30
+    );
 
-    var moveToDeck = this.tweens.add({
+    const moveToDeck = this.tweens.add({
       targets: handSprite,
       x: gameWidth - 250,
       ease: "Power2",
@@ -79,15 +81,19 @@ export default class MainScene extends Phaser.Scene {
     });
   }
 
+  addSprite(x, y, image, scale, angle = 0) {
+    return this.add.sprite(x, y, image).setScale(scale).setAngle(angle);
+  }
+
   takeCard(handSprite) {
-    var card = this.add
+    let card = this.add
       .sprite(handSprite.x + 100, handSprite.y - 50, "backImage")
       .setScale(0.2);
 
     card.setDepth(0);
     handSprite.setDepth(1);
 
-    var returnToStart = this.tweens.add({
+    const returnToStart = this.tweens.add({
       targets: handSprite,
       x: -250,
       y: gameHeight - 80,
@@ -96,7 +102,7 @@ export default class MainScene extends Phaser.Scene {
       onComplete: () => this.revealCards()
     });
 
-    var moveCard = this.tweens.add({
+    const moveCard = this.tweens.add({
       targets: card,
       x: -200,
       ease: "Power2",
@@ -105,34 +111,30 @@ export default class MainScene extends Phaser.Scene {
   }
 
   takeCardBot() {
-    var card = this.add.sprite(500, 250, "backImage").setScale(0.2);
+    let card = this.addSprite(500, 250, "backImage", 0.2);
 
-    var giveToBot = this.tweens.add({
+    const giveToBot = this.tweens.add({
       targets: card,
       x: 100,
       y: 100,
       ease: "Power2",
       duration: 2000,
       onComplete: () => {
-        // здесь мы создаем объект карты и добавляем его в "руку" бота
-        botHand.push({
+        this.botHand.push({
           name: "enemyImage",
-          sprite: null // пока что спрайт еще не создан
+          sprite: null
         });
       }
     });
   }
 
   botTurn() {
-    if (botHand.length > 0) {
-      var botCard = botHand.pop(); // берем верхнюю карту из "руки" бота
+    if (this.botHand.length > 0) {
+      let botCard = this.botHand.pop();
 
-      // создаем спрайт для карты и сохраняем его в объекте карты
-      botCard.sprite = this.add
-        .sprite(gameWidth / 2, 80, "backImage")
-        .setScale(0.25);
+      botCard.sprite = this.addSprite(gameWidth / 2, 80, "backImage", 0.25);
 
-      var moveToTable = this.tweens.add({
+      const moveToTable = this.tweens.add({
         targets: botCard.sprite,
         x: gameWidth / 2,
         y: gameHeight / 2,
@@ -141,46 +143,34 @@ export default class MainScene extends Phaser.Scene {
         onComplete: () => {
           // заменяем текстуру карты на лицевую сторону
           botCard.sprite.setTexture(botCard.name);
-          this.moveCardToTable(botCard.sprite, botTableQueue);
-          turn = "player";
+          this.moveCardToTable(botCard.sprite, this.botTableQueue);
+          this.startTurn("player");
         }
       });
     }
   }
 
   revealCards() {
-    var startingX = 100;
-    var spacing = 170;
+    const startingX = 100;
+    const spacing = 170;
 
-    // var cardRunSprite = this.add
-    //   .sprite(startingX, gameHeight + 200, "cardRunImage")
-    //   .setScale(0.25)
-    //   .setInteractive();
+    const cardWinkSprite = this.addSprite(
+      startingX + spacing * 2,
+      gameHeight + 200,
+      "cardWinkImage",
+      0.25
+    ).setInteractive();
 
-    // var cardSleepSprite = this.add
-    //   .sprite(startingX + spacing, gameHeight + 200, "cardSleepImage")
-    //   .setScale(0.25)
-    //   .setInteractive();
-
-    var cardWinkSprite = this.add
-      .sprite(startingX + spacing * 2, gameHeight + 200, "cardWinkImage")
-      .setScale(0.25)
-      .setInteractive();
-
-    // cardRunSprite.on("pointerdown", () => this.moveCardToTable(cardRunSprite));
-    // cardSleepSprite.on("pointerdown", () =>
-    //   this.moveCardToTable(cardSleepSprite)
-    // );
     cardWinkSprite.on("pointerdown", () => {
-      if (turn === "player") {
-        this.moveCardToTable(cardWinkSprite, playerTableQueue);
-        turn = "bot";
+      if (this.turn === "player") {
+        this.moveCardToTable(cardWinkSprite, this.playerTableQueue);
+        this.startTurn("bot");
         this.botTurn();
       }
     });
 
-    var moveUpTween = this.tweens.add({
-      targets: [cardWinkSprite],
+    const moveUpTween = this.tweens.add({
+      targets: cardWinkSprite,
       y: "-=300",
       ease: "Power2",
       duration: 2000
@@ -190,9 +180,9 @@ export default class MainScene extends Phaser.Scene {
   moveCardToTable(card, tableQueue) {
     card.removeInteractive();
 
-    var targetPosition = tableQueue.shift();
+    let targetPosition = tableQueue.shift();
 
-    var moveUpTween = this.tweens.add({
+    const moveUpTween = this.tweens.add({
       targets: card,
       x: targetPosition.x,
       y: targetPosition.y,
@@ -200,5 +190,9 @@ export default class MainScene extends Phaser.Scene {
       ease: "Power2",
       duration: 2000
     });
+  }
+
+  startTurn(turn) {
+    this.turn = turn;
   }
 }
