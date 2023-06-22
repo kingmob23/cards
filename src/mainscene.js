@@ -5,12 +5,12 @@ import cardRunImage from "./assets/run.png";
 import cardSleepImage from "./assets/sleep.png";
 import cardWinkImage from "./assets/wink.png";
 import backImage from "./assets/back.svg";
-import tableImage from "./assets/table.png";
+import enemyImage from "./assets/enemy.png";
 
 const gameWidth = 1024;
 const gameHeight = 576;
 
-const tablePositions = [
+const playerTablePositions = [
   { x: 200, y: gameHeight - 180 },
   { x: 300, y: gameHeight - 180 },
   { x: 400, y: gameHeight - 180 },
@@ -18,7 +18,20 @@ const tablePositions = [
   { x: 600, y: gameHeight - 180 }
 ];
 
-var tableQueue = [...tablePositions];
+const botTablePositions = [
+  { x: 200, y: 80 },
+  { x: 300, y: 80 },
+  { x: 400, y: 80 },
+  { x: 500, y: 80 },
+  { x: 600, y: 80 }
+];
+
+var playerTableQueue = [...playerTablePositions];
+var botTableQueue = [...botTablePositions];
+
+var botHand = [];
+
+var turn = "player";
 
 export default class MainScene extends Phaser.Scene {
   constructor() {
@@ -32,7 +45,7 @@ export default class MainScene extends Phaser.Scene {
     this.load.image("cardSleepImage", cardSleepImage);
     this.load.image("cardWinkImage", cardWinkImage);
     this.load.image("backImage", backImage);
-    this.load.image("tableImage", tableImage);
+    this.load.image("enemyImage", enemyImage);
   }
 
   create() {
@@ -43,15 +56,10 @@ export default class MainScene extends Phaser.Scene {
     const scale = Math.max(scaleX, scaleY);
     bg.setScale(scale).setScrollFactor(0);
 
-    var tableSprite = this.add
-      .sprite(gameWidth / 2, gameHeight / 2, "tableImage")
-      .setScale(0.55)
-      .setAngle(0);
-
     var backSprite = this.add
-      .sprite(gameWidth - 180, gameHeight - 150, "backImage")
+      .sprite(gameWidth - 180, gameHeight / 2, "backImage")
       .setScale(0.2)
-      .setAngle(0);
+      .setAngle(90);
 
     // Предположим, что рука изначально находится за пределами экрана
     var handSprite = this.add
@@ -64,7 +72,10 @@ export default class MainScene extends Phaser.Scene {
       x: gameWidth - 250,
       ease: "Power2",
       duration: 2000,
-      onComplete: () => this.takeCard(handSprite)
+      onComplete: () => {
+        this.takeCard(handSprite);
+        this.takeCardBot();
+      }
     });
   }
 
@@ -93,45 +104,93 @@ export default class MainScene extends Phaser.Scene {
     });
   }
 
+  takeCardBot() {
+    var card = this.add.sprite(500, 250, "backImage").setScale(0.2);
+
+    var giveToBot = this.tweens.add({
+      targets: card,
+      x: 100,
+      y: 100,
+      ease: "Power2",
+      duration: 2000,
+      onComplete: () => {
+        // здесь мы создаем объект карты и добавляем его в "руку" бота
+        botHand.push({
+          name: "enemyImage",
+          sprite: null // пока что спрайт еще не создан
+        });
+      }
+    });
+  }
+
+  botTurn() {
+    if (botHand.length > 0) {
+      var botCard = botHand.pop(); // берем верхнюю карту из "руки" бота
+
+      // создаем спрайт для карты и сохраняем его в объекте карты
+      botCard.sprite = this.add
+        .sprite(gameWidth / 2, 80, "backImage")
+        .setScale(0.25);
+
+      var moveToTable = this.tweens.add({
+        targets: botCard.sprite,
+        x: gameWidth / 2,
+        y: gameHeight / 2,
+        ease: "Power2",
+        duration: 2000,
+        onComplete: () => {
+          // заменяем текстуру карты на лицевую сторону
+          botCard.sprite.setTexture(botCard.name);
+          this.moveCardToTable(botCard.sprite, botTableQueue);
+          turn = "player";
+        }
+      });
+    }
+  }
+
   revealCards() {
     var startingX = 100;
     var spacing = 170;
 
-    var cardRunSprite = this.add
-      .sprite(startingX, gameHeight + 200, "cardRunImage")
-      .setScale(0.25)
-      .setInteractive();
+    // var cardRunSprite = this.add
+    //   .sprite(startingX, gameHeight + 200, "cardRunImage")
+    //   .setScale(0.25)
+    //   .setInteractive();
 
-    var cardSleepSprite = this.add
-      .sprite(startingX + spacing, gameHeight + 200, "cardSleepImage")
-      .setScale(0.25)
-      .setInteractive();
+    // var cardSleepSprite = this.add
+    //   .sprite(startingX + spacing, gameHeight + 200, "cardSleepImage")
+    //   .setScale(0.25)
+    //   .setInteractive();
 
     var cardWinkSprite = this.add
       .sprite(startingX + spacing * 2, gameHeight + 200, "cardWinkImage")
       .setScale(0.25)
       .setInteractive();
 
-    cardRunSprite.on("pointerdown", () => this.moveCardToTable(cardRunSprite));
-    cardSleepSprite.on("pointerdown", () =>
-      this.moveCardToTable(cardSleepSprite)
-    );
-    cardWinkSprite.on("pointerdown", () =>
-      this.moveCardToTable(cardWinkSprite)
-    );
+    // cardRunSprite.on("pointerdown", () => this.moveCardToTable(cardRunSprite));
+    // cardSleepSprite.on("pointerdown", () =>
+    //   this.moveCardToTable(cardSleepSprite)
+    // );
+    cardWinkSprite.on("pointerdown", () => {
+      if (turn === "player") {
+        this.moveCardToTable(cardWinkSprite, playerTableQueue);
+        turn = "bot";
+        this.botTurn();
+      }
+    });
 
     var moveUpTween = this.tweens.add({
-      targets: [cardRunSprite, cardSleepSprite, cardWinkSprite],
+      targets: [cardWinkSprite],
       y: "-=300",
       ease: "Power2",
       duration: 2000
     });
   }
 
-  moveCardToTable(card) {
-    card.removeInteractive(); // Сделаем карту неинтерактивной
+  moveCardToTable(card, tableQueue) {
+    card.removeInteractive();
 
-    var targetPosition = tableQueue.shift(); // Берем первую свободную позицию на столе
+    var targetPosition = tableQueue.shift();
 
     var moveUpTween = this.tweens.add({
       targets: card,
