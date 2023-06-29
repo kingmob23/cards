@@ -133,6 +133,7 @@ export default class MainScene extends Phaser.Scene {
       let botCard = this.botHand.pop();
 
       botCard.sprite = this.addSprite(gameWidth / 2, 80, "backImage", 0.25);
+      botCard.sprite.setAngle(180);
 
       const moveToTable = this.tweens.add({
         targets: botCard.sprite,
@@ -141,7 +142,6 @@ export default class MainScene extends Phaser.Scene {
         ease: "Power2",
         duration: 2000,
         onComplete: () => {
-          // заменяем текстуру карты на лицевую сторону
           botCard.sprite.setTexture(botCard.name);
           this.moveCardToTable(botCard.sprite, this.botTableQueue);
           this.startTurn("player");
